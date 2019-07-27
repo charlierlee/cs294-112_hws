@@ -8,39 +8,31 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
+
 import dqn
 from dqn_utils import *
 from atari_wrappers import *
-
 import sys
 
+sys.stdout.flush()
 tf.logging.set_verbosity(tf.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-def atari_model(img_in, num_actions, scope, reuse=False):
-    # as described in https://storage.googleapis.com/deepmind-data/assets/papers/DeepMindNature14236Paper.pdf
+def atari_model(ram_in, num_actions, scope, reuse=False):
     with tf.variable_scope(scope, reuse=reuse):
-        out = img_in
-        with tf.variable_scope("convnet"):
-            # original architecture
-            out = layers.convolution2d(out, num_outputs=32, kernel_size=8, stride=4, activation_fn=tf.nn.relu)
-            out = layers.convolution2d(out, num_outputs=64, kernel_size=4, stride=2, activation_fn=tf.nn.relu)
-            out = layers.convolution2d(out, num_outputs=64, kernel_size=3, stride=1, activation_fn=tf.nn.relu)
-        out = layers.flatten(out)
+        out = ram_in
+        #out = tf.concat(1,(ram_in[:,4:5],ram_in[:,8:9],ram_in[:,11:13],ram_in[:,21:22],ram_in[:,50:51], ram_in[:,60:61],ram_in[:,64:65]))
         with tf.variable_scope("action_value"):
-            out = layers.fully_connected(out, num_outputs=512,         activation_fn=tf.nn.relu)
+            out = layers.fully_connected(out, num_outputs=256, activation_fn=tf.nn.relu)
+            out = layers.fully_connected(out, num_outputs=128, activation_fn=tf.nn.relu)
+            out = layers.fully_connected(out, num_outputs=64, activation_fn=tf.nn.relu)
             out = layers.fully_connected(out, num_outputs=num_actions, activation_fn=None)
 
         return out
 
 def atari_learn(env,
                 session,
-                args,
                 num_timesteps):
-    logdir = os.path.join('data', args.exp_name)
-    #if not(os.path.exists(logdir)):
-        #os.makedirs(logdir)
-    
     # This is just a rough estimate
     num_iterations = float(num_timesteps) / 4.0
 
@@ -64,14 +56,14 @@ def atari_learn(env,
 
     exploration_schedule = PiecewiseSchedule(
         [
-            (0, 1.0),
+            (0, 0.2),
             (1e6, 0.1),
             (num_iterations / 2, 0.01),
         ], outside_value=0.01
     )
 
     dqn.learn(
-        env=env,
+        env,
         q_func=atari_model,
         optimizer_spec=optimizer,
         session=session,
@@ -79,14 +71,12 @@ def atari_learn(env,
         stopping_criterion=stopping_criterion,
         replay_buffer_size=1000000,
         batch_size=32,
-        gamma=args.gamma,
+        gamma=0.99,
         learning_starts=50000,
         learning_freq=4,
-        frame_history_len=4,
+        frame_history_len=1,
         target_update_freq=10000,
-        grad_norm_clipping=10,
-        double_q=args.double_q,
-        logdir=logdir
+        grad_norm_clipping=10
     )
     env.close()
 
@@ -121,9 +111,9 @@ def get_env(task, seed):
     set_global_seeds(seed)
     env.seed(seed)
 
-    expt_dir = '/tmp/hw3_vid_dir2/'
+    expt_dir = '/tmp/hw3_vid_dir/'
     env = wrappers.Monitor(env, osp.join(expt_dir, "gym"), force=True)
-    env = wrap_deepmind(env)
+    env = wrap_deepmind_ram(env)
 
     return env
 
@@ -149,7 +139,7 @@ def main():
     print('random seed = %d' % seed)
     env = get_env(task, seed)
     session = get_session()
-    atari_learn(env, session, args, num_timesteps=5e7)
+    atari_learn(env, session, num_timesteps=int(4e7))
 
 if __name__ == "__main__":
     main()

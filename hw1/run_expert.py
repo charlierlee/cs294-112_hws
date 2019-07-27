@@ -64,6 +64,7 @@ def main():
                 observations.append(obs)
                 actions.append(action)
                 obs, r, done, _ = env.step(action)
+                env.render()
                 totalr += r
                 steps += 1
                 if args.render:

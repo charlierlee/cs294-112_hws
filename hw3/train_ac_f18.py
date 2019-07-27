@@ -289,6 +289,7 @@ class Agent(object):
             ac = ac[0]
             acs.append(ac)
             ob, rew, done, _ = env.step(ac)
+            env.render()
             # add the observation after taking a step to next_obs
             # YOUR CODE HERE
             next_obs.append(ob)

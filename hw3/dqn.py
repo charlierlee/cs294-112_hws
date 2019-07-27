@@ -265,6 +265,7 @@ class QLearner(object):
             act = self.session.run(self.best_act, feed_dict={self.obs_t_ph:[obs]})[0]
         
         obs, reward, done, info = self.env.step(act)
+        self.env.render()
         self.replay_buffer.store_effect(idx, act, reward, done)
         if done:
             self.last_obs = self.env.reset()
