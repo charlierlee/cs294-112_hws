@@ -1,8 +1,7 @@
 gym==0.10.5
-gym[all]
-box2d
+#box2d
 #mujoco-py==1.50.1.56
-tensorflow-gpu
+tensorflow-gpu==1.14
 numpy
 seaborn
 opencv-python

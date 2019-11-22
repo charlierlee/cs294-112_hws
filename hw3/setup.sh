@@ -1,13 +1,17 @@
+sudo apt-get install ffmpeg
+
 virtualenv --system-site-packages -p python3 ./hw3
 source hw3/bin/activate
-cd ..
-git clone https://github.com/openai/mujoco-py.git
-pip install -e ./mujoco-py
-cd hw3
+#cd ..
+#git clone https://github.com/openai/mujoco-py.git
+#pip install -e ./mujoco-py
+#cd hw3
 pip install -r requirements.txt
-pip install gym[all]
+pip install gym[atari]
 
 #python -m retro.import .
-pip3 uninstall pyglet
+#pip3 uninstall pyglet
 
-pip3 install pyglet==1.3.2
+#pip3 install pyglet==1.3.2
+
+./run_111.sh
